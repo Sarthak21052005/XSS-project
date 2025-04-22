@@ -1,65 +1,81 @@
+# feature_injector.py
+
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+import random
+import string
 
-# Define safe test payloads
-TEST_PAYLOADS = [
-    "<b>test</b>",
-    "'safe'",
-    "\"harmless\"",
-    "<script>alert('test')</script>",
-    "1234567890",
-    "admin@example.com"
+# Predefined harmless HTML and JavaScript examples
+HTML_SNIPPETS = [
+    "<b>example</b>", "<i>demo</i>", "<u>check</u>", "<div>safe</div>", "<span>clean</span>",
+    "<input type='text' value='demo'>"
+]
+JS_SNIPPETS = [
+    "console.log('safe');", "let a = 10;", "function demo() {}", "var user = 'guest';"
 ]
 
-def inject_features_into_forms(url):
+# Function to create a random string token
+def create_token(length=8):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choices(characters, k=length))
+
+def inject_benign_features(url):
     try:
         session = requests.Session()
-        res = session.get(url)
-        soup = BeautifulSoup(res.text, 'html.parser')
+        response = session.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
 
         forms = soup.find_all("form")
-        print(f"\n📝 Found {len(forms)} form(s) on the page.")
+        print(f"\nTotal forms found: {len(forms)}")
 
-        for i, form in enumerate(forms):
-            print(f"\n🔍 Testing Form #{i+1}")
+        for index, form in enumerate(forms):
+            print(f"\nTesting form #{index + 1}")
 
             action = form.get("action")
             method = form.get("method", "get").lower()
-            form_url = urljoin(url, action)
-
-            # Create data dictionary for input fields
-            data = {}
+            target_url = urljoin(url, action)
             inputs = form.find_all("input")
-            for input_tag in inputs:
-                name = input_tag.get("name")
-                input_type = input_tag.get("type", "text")
+
+            form_data = {}
+            tracking_tokens = []
+
+            for field in inputs:
+                name = field.get("name")
+                field_type = field.get("type", "text")
 
                 if name:
-                    if input_type == "email":
-                        data[name] = "user@example.com"
-                    elif input_type == "password":
-                        data[name] = "SafePassword123"
+                    token = create_token()
+                    html_feature = random.choice(HTML_SNIPPETS)
+                    js_feature = random.choice(JS_SNIPPETS)
+
+                    if field_type == "email":
+                        value = f"user_{token}@mail.com"
+                    elif field_type == "password":
+                        value = f"Pass_{token}"
                     else:
-                        data[name] = TEST_PAYLOADS[i % len(TEST_PAYLOADS)]
+                        value = f"{html_feature} // {js_feature} /*{token}*/"
 
-            print(f"📤 Injecting data: {data}")
+                    form_data[name] = value
+                    tracking_tokens.append(token)
 
-            # Submit the form
+            print(f"Submitting data: {form_data}")
+
             if method == "post":
-                response = session.post(form_url, data=data)
+                result = session.post(target_url, data=form_data)
             else:
-                response = session.get(form_url, params=data)
+                result = session.get(target_url, params=form_data)
 
-            # Check if test payload appears in response
-            if any(payload in response.text for payload in TEST_PAYLOADS):
-                print("⚠️ Test payload reflected in response! Might be vulnerable.")
+            reflected = [tok for tok in tracking_tokens if tok in result.text]
+
+            if reflected:
+                print(f"Reflection Detected. Tokens: {reflected}")
             else:
-                print("✅ Input seems sanitized or not reflected.")
+                print("No reflection found. Inputs appear to be filtered.")
 
-    except Exception as e:
-        print(f"❌ Error during feature injection: {e}")
+    except Exception as err:
+        print(f"An error occurred: {err}")
 
 if __name__ == "__main__":
-    url = input("🔗 Enter the target URL: ")
-    inject_features_into_forms(url)
+    target = input("Enter target URL: ")
+    inject_benign_features(target)
