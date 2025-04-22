@@ -8,6 +8,8 @@ import urllib.parse
 from Code_tracer import lexical_analyzer, parse_js, generate_cfg
 # Import JS Extractor
 from js_extractor import extract_js_behavior_types
+# Import feature Injector
+from feature_injector import inject_benign_features
 
 def save_script(js_code, filename):
     with open(filename, "w", encoding="utf-8") as f:
@@ -15,19 +17,19 @@ def save_script(js_code, filename):
     print(f" Saved JS to: {filename}")
 
 def analyze_js(js_code, script_name=""):
-    print(f"\n🔍 Analyzing {script_name}:")
+    print(f"\n Analyzing {script_name}:")
 
     # Tokenization
     tokens = lexical_analyzer(js_code)
-    print("  • Tokens:", tokens)
+    print("   Tokens:", tokens)
 
     # AST
     parsed_ast = parse_js(js_code)
-    print("  • AST Parsed.")
+    print("   AST Parsed.")
 
     # CFG
     cfg = generate_cfg(parsed_ast)
-    print("  • Control Flow Graph (CFG):", cfg)
+    print("   Control Flow Graph (CFG):", cfg)
 
 def crawl_website(url):
     try:
@@ -97,4 +99,11 @@ if __name__ == "__main__":
     parser.add_argument("url", help="Website URL to crawl and analyze")
 
     args = parser.parse_args()
-    crawl_website(args.url)
+    url = args.url  # Define 'url' here for reuse
+
+    crawl_website(url)
+
+    # After crawling and JS analysis is done
+    print("\nStarting Feature Injection Phase...")
+    inject_benign_features(url)
+
