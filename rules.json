@@ -2,22 +2,22 @@
     {
         "form_field": "family",
         "field_type": "hidden",
-        "html_feature": "<div>test</div>",
+        "html_feature": "<i>sample</i>",
         "js_feature": "var test = 1;",
-        "token": "j25kFmc6"
+        "token": "FjEiak3M"
     },
     {
         "form_field": "search",
         "field_type": "search",
-        "html_feature": "<span>safe</span>",
+        "html_feature": "<i>sample</i>",
         "js_feature": "console.log('benign')",
-        "token": "RPyJ2zE9"
+        "token": "PFF9BPAy"
     },
     {
         "form_field": "go",
         "field_type": "hidden",
-        "html_feature": "<div>test</div>",
-        "js_feature": "console.log('benign')",
-        "token": "y2BL2w8b"
+        "html_feature": "<span>safe</span>",
+        "js_feature": "var test = 1;",
+        "token": "kruet1c0"
     }
 ]
